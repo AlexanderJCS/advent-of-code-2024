@@ -26,12 +26,8 @@ def blink(stone_dict: dict[int, int]) -> dict[int, int]:
 def main():
     stones = stone_map(part_1.parse_input())
     
-    print(stones)
-    
     for _ in range(75):
         stones = blink(stones)
-    
-    print(stones)
     
     print(sum(stones.values()))
 
