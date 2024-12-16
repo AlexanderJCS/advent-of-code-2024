@@ -15,11 +15,7 @@ class Crate:
         return left, right
     
     def move(self, offset: tuple):
-        self.left, self.right = self.what_if(offset) 
-        self.moved = True
-    
-    def reset_moved(self):
-        self.moved = False
+        self.left, self.right = self.what_if(offset)
     
     def collides_crate(self, other):
         return self.left in (other.left, other.right) or self.right in (other.left, other.right)
@@ -40,21 +36,6 @@ class Crates:
             Crate((crate[0] * 2, crate[1]), (crate[0] * 2 + 1, crate[1]))
             for crate in crates_set
         ]
-    
-    def reset_crate_moved(self):
-        for crate in self.crates:
-            crate.reset_moved()
-    
-    def are_conflicts(self, robot_pos: tuple):
-        for i, crate_1 in enumerate(self.crates):
-            if crate_1.collides_point(robot_pos):
-                return True
-            
-            for crate_2 in self.crates[i + 1:]:
-                if crate_2.collides_crate(crate_1):
-                    return True
-        
-        return False
     
     def move_crate(self, move_crate: Crate, walls: set, robot_movement: tuple):
         left, right = move_crate.what_if(robot_movement)
@@ -83,7 +64,7 @@ class Crates:
     def score(self):
         return sum(crate.score() for crate in self.crates)
     
-    def left_or_right(self, point):
+    def char_at(self, point):
         for crate in self.crates:
             if point == crate.left:
                 return "["
@@ -122,8 +103,8 @@ def print_map(robot, walls, crates, dimensions):
                 print("@", end="")
             elif (x, y) in walls:
                 print("#", end="")
-            elif left_or_right := crates.left_or_right((x, y)):
-                print(left_or_right, end="")
+            elif crate_char := crates.char_at((x, y)):
+                print(crate_char, end="")
             else:
                 print(".", end="")
         
