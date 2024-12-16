@@ -9,28 +9,26 @@ def optimal_path_tiles(walls, start, end, min_score):
     
     queue = collections.deque()
     queue.append((start, (1, 0), set(), 0))
-
-    min_at_pos = {}
+    
+    memo = {}
     
     while queue:
         pos, heading, traversed, score = queue.popleft()
-        
-        traversed = set(traversed)
-        traversed.add(pos)
         
         if pos == end:
             tiles.update(traversed)
             continue
         
-        if score > min_score:  # no need to continue searching
-            traversed.remove(pos)
+        manhattan_dist = end[0] - pos[0] + end[1] - pos[1]
+        if score + manhattan_dist > min_score:  # no need to continue searching
             continue
         
-        state = (pos, tuple(traversed))
-        if min_at_pos.get(state, math.inf) < score:
+        if memo.get((pos, heading), math.inf) < score:
             continue
+        memo[(pos, heading)] = score
         
-        min_at_pos[state] = score
+        traversed = set(traversed)
+        traversed.add(pos)
         
         for direction in ((0, 1), (1, 0), (0, -1), (-1, 0)):
             if direction == (-heading[0], -heading[1]):
@@ -67,7 +65,7 @@ def main():
     best_paths = optimal_path_tiles(walls, start, end, min_score)
     
     print_best_path(walls, best_paths, bounds)
-    print(len(best_paths))
+    print(len(best_paths) + 1)
 
 
 if __name__ == "__main__":
