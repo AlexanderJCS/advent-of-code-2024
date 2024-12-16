@@ -38,27 +38,46 @@ class Crates:
         ]
     
     def move_crate(self, move_crate: Crate, walls: set, robot_movement: tuple):
-        left, right = move_crate.what_if(robot_movement)
-
-        if left in walls or right in walls:
-            return False
+        move_crate.move(robot_movement)
 
         for crate in self.crates:
             if move_crate is crate:
                 continue
 
-            if crate.collides_point(left) or crate.collides_point(right):
-                if not self.move_crate(crate, walls, robot_movement):
-                    return False
+            if crate.collides_crate(move_crate):
+                self.move_crate(crate, walls, robot_movement)
+    
+    def can_move_crate(self, move_crate: Crate, walls: set, robot_movement: tuple):
+        left, right = move_crate.what_if(robot_movement)
         
-        move_crate.move(robot_movement)
+        if left in walls or right in walls:
+            return False
+        
+        for crate in self.crates:
+            if move_crate is crate:
+                continue
+            
+            if (
+                (crate.collides_point(left) or crate.collides_point(right))  # collision
+                and not self.can_move_crate(crate, walls, robot_movement)  # collides, and crate can't move
+            ):
+                return False
+        
         return True
     
     def resolve_conflicts(self, robot_pos: tuple, walls: set, robot_movement: tuple):
-        for crate in self.crates:
-            if crate.collides_point(robot_pos):
-                return self.move_crate(crate, walls, robot_movement)
+        move_crate = next(
+            (crate for crate in self.crates if crate.collides_point(robot_pos)),
+            None,
+        )
         
+        if move_crate is None:
+            return True
+
+        if not self.can_move_crate(move_crate, walls, robot_movement):
+            return False
+
+        self.move_crate(move_crate, walls, robot_movement)
         return True
     
     def score(self):
