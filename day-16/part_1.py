@@ -1,6 +1,5 @@
 import math
 import collections
-import time
 
 
 def parse_input():
@@ -19,35 +18,29 @@ def parse_input():
             elif ch == "E":
                 end = (x, y)
     
-    return walls, start, end
+    return walls, start, end, (len(data[0]), len(data))
 
 
 def min_score(walls, start, end):
     queue = collections.deque()
-    queue.append((start, (1, 0), set(), 0))
+    queue.append((start, (1, 0), 0))
     
-    min_score = math.inf
-    
-    iterations = 0
-    start_time = time.time()
-    
+    running_min_score = math.inf
     min_at_pos = {}
     
+    traversed = set()
+    
     while queue:
-        iterations += 1
-        if iterations % 50000 == 0:
-            print(f"{iterations=}, {len(queue)=}, time elapsed: {time.time() - start_time:.2f}, min score: {min_score}")
-        
-        pos, heading, traversed, score = queue.popleft()
+        pos, heading, score = queue.popleft()
         
         traversed.add(pos)
         
         if pos == end:
-            min_score = min(score, min_score)
+            running_min_score = min(score, running_min_score)
             traversed.remove(pos)
             continue
         
-        if score > min_score:  # no need to continue searching
+        if score > running_min_score:  # no need to continue searching
             traversed.remove(pos)
             continue
         
@@ -67,16 +60,16 @@ def min_score(walls, start, end):
                 continue
             
             queue.append(
-                (new_pos, direction, traversed, score + 1 + (direction != heading) * 1000)
+                (new_pos, direction, score + 1 + (direction != heading) * 1000)
             )
             
         traversed.remove(pos)
         
-    return min_score
+    return running_min_score
 
 
 def main():
-    walls, start, end = parse_input()
+    walls, start, end, _ = parse_input()
     
     print(min_score(walls, start, end))
 
