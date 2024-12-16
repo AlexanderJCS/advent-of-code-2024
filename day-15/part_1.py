@@ -1,4 +1,11 @@
 
+INSTRUCTIONS_MAP = {
+    "<": (-1, 0),
+    "^": (0, -1),
+    ">": (1, 0),
+    "v": (0, 1)
+}
+
 
 def parse_input():
     with open("input.txt") as f:
@@ -107,16 +114,8 @@ def main():
     robot_map, instructions = parse_input()
     robot_pos, crates, walls = convert_to_coords(robot_map)
 
-    instructions_map = {
-        "<": (-1, 0),
-        "^": (0, -1),
-        ">": (1, 0),
-        "v": (0, 1)
-    }
-
     for instruction in instructions:
-        robot_pos, crates = run_instruction(robot_pos, crates, walls, instructions_map[instruction])
-        
+        robot_pos, crates = run_instruction(robot_pos, crates, walls, INSTRUCTIONS_MAP[instruction])
         # print(f"\n{instruction}")
         # print_board(robot_pos, crates, walls, (len(robot_map[0]), len(robot_map)))
     
