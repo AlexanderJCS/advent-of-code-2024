@@ -1,5 +1,3 @@
-from collections import Counter
-import math
 from functools import cache
 
 
@@ -48,20 +46,11 @@ def path(start, end, walls):
     return traversed
 
 
-def manhattan(radius: int):
-    return [
-        (x, y)
-        for x in range(-radius, radius + 1)
-        for y in range(-radius, radius + 1)
-        if abs(x) + abs(y) <= radius + 1
-    ]
-
-
 def shortcut(pos, radius, current_score, orig_path, bounds, traversed=None):
     if traversed is None:
         traversed = set()
     
-    if radius < 0:
+    if radius < 0 or radius == 0 and pos not in orig_path:
         return []
     
     shortcuts = []
@@ -74,7 +63,7 @@ def shortcut(pos, radius, current_score, orig_path, bounds, traversed=None):
             continue
         
         if offset_pos not in orig_path and offset_pos not in traversed:
-            traversed = set(traversed)
+            traversed = set(traversed)  # not the most efficient but it works
             shortcuts.extend(shortcut(offset_pos, radius - 1, current_score + 1, orig_path, bounds))
         else:
             shortcuts.append(orig_path[offset_pos] - (current_score + 1))
@@ -85,16 +74,17 @@ def shortcut(pos, radius, current_score, orig_path, bounds, traversed=None):
 def main():
     walls, start, end, bounds = parse_input()
     orig_path = path(start, end, walls)
-    
-    all_shortcuts = {}
+
+    over_eq_100 = 0
     
     for coord in orig_path:
         shortcuts = shortcut(coord, 2, orig_path[coord], orig_path, bounds)
         
-        if shortcuts:
-            all_shortcuts[max(shortcuts)] = all_shortcuts.get(max(shortcuts), 0) + 1
+        for saving in shortcuts:
+            if saving >= 100:
+                over_eq_100 += 1
     
-    print(all_shortcuts)
+    print(over_eq_100)
 
 
 if __name__ == "__main__":
