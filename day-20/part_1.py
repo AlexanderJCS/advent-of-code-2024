@@ -57,11 +57,12 @@ def manhattan(radius: int):
     ]
 
 
-def shortcut(pos, radius, current_score, orig_path, traversed=None):
-    # todo: this function needs to be recursive
-    
+def shortcut(pos, radius, current_score, orig_path, bounds, traversed=None):
     if traversed is None:
         traversed = set()
+    
+    if radius < 0:
+        return []
     
     shortcuts = []
     
@@ -69,9 +70,14 @@ def shortcut(pos, radius, current_score, orig_path, traversed=None):
     for offset in ((0, -1), (0, 1), (1, 0), (-1, 0)):
         offset_pos = (pos[0] + offset[0], pos[1] + offset[1])
         
-        if offset_pos not in orig_path:
+        if offset_pos[0] < 0 or offset_pos[0] >= bounds[0] or offset_pos[1] < 0 or offset_pos[1] >= bounds[1]:
+            continue
+        
+        if offset_pos not in orig_path and offset_pos not in traversed:
             traversed = set(traversed)
-            shortcuts.extend(shortcut(pos, ))
+            shortcuts.extend(shortcut(offset_pos, radius - 1, current_score + 1, orig_path, bounds))
+        else:
+            shortcuts.append(orig_path[offset_pos] - (current_score + 1))
     
     return shortcuts
 
@@ -80,15 +86,15 @@ def main():
     walls, start, end, bounds = parse_input()
     orig_path = path(start, end, walls)
     
-    print(shortcut((1, 3), 2, orig_path[(1, 3)], orig_path))
+    all_shortcuts = {}
     
-    # upper_bound = search_iterative(start, end, walls, bounds, cheats=0)[0]
-    # quicker = search_iterative(start, end, walls, bounds, score_cap=upper_bound)
-    # savings = [upper_bound - time for time in quicker]
-    # savings_count = dict(Counter(savings))
-    #
-    # big_savings = sum(count for saving, count in savings_count.items() if saving >= 100)
-    # print(big_savings)
+    for coord in orig_path:
+        shortcuts = shortcut(coord, 2, orig_path[coord], orig_path, bounds)
+        
+        if shortcuts:
+            all_shortcuts[max(shortcuts)] = all_shortcuts.get(max(shortcuts), 0) + 1
+    
+    print(all_shortcuts)
 
 
 if __name__ == "__main__":
