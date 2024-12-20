@@ -25,103 +25,70 @@ def parse_input():
     return frozenset(walls), start, end, bounds
 
 
-@cache
-def search(
-        pos: tuple,
-        end: tuple,
-        walls: frozenset,
-        bounds: tuple,
-        cheats=1,  # subtract 1 by num allowed cheats
-        enabled_cheats=False,
-        traversed: list | None = None,
-        score: int = 0,
-        score_cap: int = math.inf
-) -> list[int]:
+def path(start, end, walls):
+    traversed = {}
+    score = 0
+
+    pos = start
+
+    while pos != end:
+        traversed[pos] = score
+        
+        for direction in ((-1, 0), (1, 0), (0, 1), (0, -1)):
+            new_pos = (pos[0] + direction[0], pos[1] + direction[1])
+            
+            if new_pos in traversed or new_pos in walls:
+                continue
+            
+            score += 1
+            pos = new_pos
+            break
+    
+    traversed[pos] = score
+    return traversed
+
+
+def manhattan(radius: int):
+    return [
+        (x, y)
+        for x in range(-radius, radius + 1)
+        for y in range(-radius, radius + 1)
+        if abs(x) + abs(y) <= radius + 1
+    ]
+
+
+def shortcut(pos, radius, current_score, orig_path, traversed=None):
+    # todo: this function needs to be recursive
+    
     if traversed is None:
-        traversed = frozenset()
+        traversed = set()
     
-    # horribly inefficient but it works
-    traversed = set(traversed)
+    shortcuts = []
+    
     traversed.add(pos)
-    
-    if score > score_cap or pos[0] < 0 or pos[0] >= bounds[0] or pos[1] < 0 or pos[1] >= bounds[1]:
-        return []
-    
-    if pos == end:
-        return [score]
-    
-    if enabled_cheats:
-        cheats -= 1
-    
-    savings = []
-    for offset in ((-1, 0), (1, 0), (0, 1), (0, -1)):
+    for offset in ((0, -1), (0, 1), (1, 0), (-1, 0)):
         offset_pos = (pos[0] + offset[0], pos[1] + offset[1])
         
-        if offset_pos in traversed:
-            continue
-        
-        is_cheat = offset_pos in walls
-        if is_cheat and cheats <= 0:
-            continue
-        
-        traversed = frozenset(traversed)
-        savings.extend(search(offset_pos, end, walls, bounds, cheats, enabled_cheats or is_cheat, traversed, score + 1, score_cap))
-    
-    return savings
-
-
-def search_iterative(
-        start: tuple,
-        end: tuple,
-        walls: frozenset,
-        bounds: tuple,
-        cheats=1,  # subtract 1 by num allowed cheats
-        score_cap: int = math.inf
-) -> list[int]:
-    stack = [(start, 0, cheats, False, set())]
-    results = []
-    
-    while stack:
-        pos, score, cheats, cheating_enabled, traversed = stack.pop()
-        traversed.add(pos)
-        
-        if score > score_cap or pos[0] < 0 or pos[0] >= bounds[0] or pos[1] < 0 or pos[1] >= bounds[1]:
-            continue
-        
-        if pos == end:
-            results.append(score)
-            continue
-        
-        if cheating_enabled:
-            cheats -= 1
-        
-        for offset in ((-1, 0), (1, 0), (0, 1), (0, -1)):
-            offset_pos = (pos[0] + offset[0], pos[1] + offset[1])
-            
-            if offset_pos in traversed:
-                continue
-            
-            is_cheat = offset_pos in walls
-            if is_cheat and cheats <= 0:
-                continue
-            
+        if offset_pos not in orig_path:
             traversed = set(traversed)
-            stack.append(
-                (offset_pos, score + 1, cheats, cheating_enabled or is_cheat, traversed)
-            )
+            shortcuts.extend(shortcut(pos, ))
     
-    return results
+    return shortcuts
 
 
 def main():
     walls, start, end, bounds = parse_input()
-    upper_bound = search_iterative(start, end, walls, bounds, cheats=0)[0]
-    quicker = search_iterative(start, end, walls, bounds, score_cap=upper_bound)
-    savings = [upper_bound - time for time in quicker]
-    savings_count = dict(Counter(savings))
+    orig_path = path(start, end, walls)
     
-    big_savings = sum(count for saving, count in savings_count.items() if saving >= 100)
-    print(big_savings)
+    print(shortcut((1, 3), 2, orig_path[(1, 3)], orig_path))
+    
+    # upper_bound = search_iterative(start, end, walls, bounds, cheats=0)[0]
+    # quicker = search_iterative(start, end, walls, bounds, score_cap=upper_bound)
+    # savings = [upper_bound - time for time in quicker]
+    # savings_count = dict(Counter(savings))
+    #
+    # big_savings = sum(count for saving, count in savings_count.items() if saving >= 100)
+    # print(big_savings)
 
 
 if __name__ == "__main__":
