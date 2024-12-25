@@ -33,7 +33,7 @@ def parse_input():
 def shortest_path(p1, p2, avoid_point):
     displacement = (p2[0] - p1[0], p2[1] - p1[1])
     
-    y_first = avoid_point[1] == p1[1]
+    y_first = avoid_point[1] == p1[1] or avoid_point[0] == p2[0]
     
     if not y_first:
         path = ("<" if displacement[0] < 0 else ">") * abs(displacement[0])
@@ -97,6 +97,8 @@ def decode(encoded: str):
 def main():
     codes = parse_input()
     complexities = 0
+    
+    print(shortest_path(NUMPAD["3"], NUMPAD["4"], NUMPAD[" "]))
     
     for code in codes:
         instructions = keypad(code, NUMPAD)
